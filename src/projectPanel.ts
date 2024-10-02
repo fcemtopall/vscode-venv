@@ -2,12 +2,13 @@ import * as vscode from 'vscode';
 import { PROJECT_TYPES, GENERAL_DEV_TOOLS } from './constants';
 import { ProjectDetector } from './projectDetector';
 import { VirtualEnvironment } from './virtualEnviroment';
+import { ProfileManager } from './profileManager';
 export class ProjectPanel {
     public static currentPanel: ProjectPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
     private _virtualEnvironment: VirtualEnvironment;
-
+    private _profileManager: ProfileManager;    
 
     private constructor(panel: vscode.WebviewPanel) {
         this._panel = panel;
@@ -17,8 +18,9 @@ export class ProjectPanel {
             null,
             this._disposables
         );
-        this._panel.webview.html = this._getWebviewContent('Proje türü algılanıyor...');
+        this._panel.webview.html = this._getWebviewContent('Proje türü algılanıyor...', []);
         this._virtualEnvironment = new VirtualEnvironment(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
+        this._profileManager = new ProfileManager(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
     }
 
     public static createOrShow() {
@@ -49,6 +51,9 @@ export class ProjectPanel {
 
     private _getWebviewContent(projectType: string, extensions?: vscode.Extension<any>[]) {
         let extensionList = '';
+        const customProfileCard = this._createCustomProfileCard();
+        const recommendedProfileCard = this._createRecommendedProfileCard(projectType,extensions);
+
         if (extensions) {
             const projectSpecificExtensions: string[] = [];
             const generalDevTools: string[] = [];
@@ -91,6 +96,8 @@ export class ProjectPanel {
             <title>Proje Bilgileri</title>
             <style>
                 body { font-family: Arial, sans-serif; }
+                .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; }
+                .card h2 { margin-top: 0; }
                 ul { list-style-type: none; padding: 0; }
                 li { margin-bottom: 10px; }
                 button { margin-left: 10px; }
@@ -98,13 +105,21 @@ export class ProjectPanel {
         </head>
         <body>
             <h1>Proje Türü: ${projectType}</h1>
-            ${extensionList}
+            ${customProfileCard}
+            ${recommendedProfileCard}
             <script>
                 const vscode = acquireVsCodeApi();
-                function toggleExtension(extensionId) {
+                function toggleExtension(profileType, extensionId) {
                     vscode.postMessage({
                         command: 'toggleExtension',
+                        profileType: profileType,
                         extensionId: extensionId
+                    });
+                }
+                function createProfile(profileType) {
+                    vscode.postMessage({
+                        command: 'createProfile',
+                        profileType: profileType
                     });
                 }
             </script>
@@ -115,22 +130,46 @@ export class ProjectPanel {
     private async _handleMessage(message: any) {
         switch (message.command) {
             case 'toggleExtension':
-                await this._toggleExtension(message.extensionId);
+                await this._toggleExtension(message.profileType, message.extensionId);
                 break;
         }
     }
 
-    private async _toggleExtension(extensionId: string) {
-        // Assuming _virtualEnv is a property that should exist on ProjectPanel
-        // If it doesn't, you might need to add it to the class or adjust this method
-        if (this._virtualEnvironment && typeof this._virtualEnvironment.toggleExtension === 'function') {
-            this._virtualEnvironment.toggleExtension(extensionId);
-        } else {
-            console.error('_virtualEnv is not properly initialized or doesn\'t have toggleExtension method');
+    private _createCustomProfileCard(): string {
+        const customProfile = this._profileManager.getCustomProfile();
+        const extensionList = customProfile.extensions.map(ext => 
+            `<li>${ext.name} <button onclick="toggleExtension('custom', '${ext.id}')">Kaldır</button></li>`
+        ).join('');
+
+        return `
+        <div class="card">
+            <h2>Özel Profil Oluştur</h2>
+            <ul>${extensionList}</ul>
+            <button onclick="createProfile('custom')">Yeni Eklenti Ekle</button>
+        </div>`;
+    }
+
+    private _createRecommendedProfileCard(projectType: string, extensions?: vscode.Extension<any>[]): string {
+        const recommendedProfile = this._profileManager.getRecommendedProfile(projectType, extensions);
+        const extensionList = recommendedProfile.extensions.map(ext => 
+            `<li>${ext.name} <button onclick="toggleExtension('recommended', '${ext.id}')">${ext.isEnabled ? 'Kaldır' : 'Ekle'}</button></li>`
+        ).join('');
+
+        return `
+        <div class="card">
+            <h2>Önerilen Profil</h2>
+            <ul>${extensionList}</ul>
+            <button onclick="createProfile('recommended')">Önerilen Profili Özelleştir</button>
+        </div>`;
+    }
+
+    private async _toggleExtension(profileType: string, extensionId: string) {
+        if (profileType === 'custom') {
+            this._profileManager.toggleCustomExtension(extensionId);
+        } else if (profileType === 'recommended') {
+            this._profileManager.toggleRecommendedExtension(extensionId);
         }
-        const projectType = await this._detectProjectType();
-        // Use spread operator to convert readonly array to mutable array
-        this.updateContent(projectType, [...vscode.extensions.all]);
+        this.updateContent(await this._detectProjectType(), [...vscode.extensions.all]);
     }
 
     private async _detectProjectType(): Promise<string> {

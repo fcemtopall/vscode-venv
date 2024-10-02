@@ -6,16 +6,19 @@
   "engines": {
     "vscode": "^1.93.0"
   },
-  "categories": [
+  "categories": [ 
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onWorkspaceChange",
+    "workspaceContains:**/*"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "vscode-venv.helloWorld",
-        "title": "Hello World"
+        "title": "Hello Developer"
       }
     ]
   },

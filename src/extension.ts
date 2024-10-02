@@ -1,26 +1,40 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { ProjectDetector } from './projectDetector';
+import { ProjectPanel } from './projectPanel';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    console.log('Eklenti aktif edildi!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vscode-venv" is now active!');
+    // Workspace değişikliklerini dinle
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(onWorkspaceChange));
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('vscode-venv.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vscode-venv!');
-	});
-
-	context.subscriptions.push(disposable);
+    // Mevcut workspace'i kontrol et
+    if (vscode.workspace.workspaceFolders) {
+        onWorkspaceChange();
+    }
 }
 
-// This method is called when your extension is deactivated
+async function onWorkspaceChange() {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        vscode.window.showInformationMessage('Açık bir proje bulunamadı.');
+        return;
+    }
+
+    const rootPath = workspaceFolders[0].uri.fsPath;
+    const detector = new ProjectDetector(rootPath);
+    const projectType = await detector.detectProjectType();
+
+    // Panel'i oluştur veya göster
+    ProjectPanel.createOrShow();
+
+    // Yüklü eklentileri al
+    const extensions = vscode.extensions.all;
+
+    // Panel içeriğini güncelle
+    if (ProjectPanel.currentPanel) {
+        ProjectPanel.currentPanel.updateContent(projectType, [...extensions]);
+    }
+}
+
 export function deactivate() {}

@@ -1,15 +1,24 @@
 import * as vscode from 'vscode';
 import { PROJECT_TYPES, GENERAL_DEV_TOOLS } from './constants';
-
+import { ProjectDetector } from './projectDetector';
+import { VirtualEnvironment } from './virtualEnviroment';
 export class ProjectPanel {
     public static currentPanel: ProjectPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
+    private _virtualEnvironment: VirtualEnvironment;
+
 
     private constructor(panel: vscode.WebviewPanel) {
         this._panel = panel;
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+        this._panel.webview.onDidReceiveMessage(
+            message => this._handleMessage(message),
+            null,
+            this._disposables
+        );
         this._panel.webview.html = this._getWebviewContent('Proje türü algılanıyor...');
+        this._virtualEnvironment = new VirtualEnvironment(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
     }
 
     public static createOrShow() {
@@ -53,7 +62,11 @@ export class ProjectPanel {
                     '<span style="color: green; margin-left: 10px;">Uyumlu</span>' : 
                     '<span style="color: red; margin-left: 10px;">Uyumsuz</span>';
                 
-                const listItem = `<li>${ext.packageJSON.displayName || ext.id} ${compatibilityLabel}</li>`;
+                    const toggleButton = `<button onclick="toggleExtension('${ext.id}')" id="${ext.id}-toggle">
+                    ${this._virtualEnvironment.isExtensionEnabled(ext.id) ? 'Devre Dışı Bırak' : 'Etkinleştir'}
+                </button>`;
+                
+                const listItem = `<li>${ext.packageJSON.displayName || ext.id} ${compatibilityLabel} ${toggleButton}</li>`;
                 
                 if (isGeneralTool) {
                     generalDevTools.push(listItem);
@@ -80,14 +93,54 @@ export class ProjectPanel {
                 body { font-family: Arial, sans-serif; }
                 ul { list-style-type: none; padding: 0; }
                 li { margin-bottom: 10px; }
+                button { margin-left: 10px; }
             </style>
         </head>
         <body>
             <h1>Proje Türü: ${projectType}</h1>
             ${extensionList}
+            <script>
+                const vscode = acquireVsCodeApi();
+                function toggleExtension(extensionId) {
+                    vscode.postMessage({
+                        command: 'toggleExtension',
+                        extensionId: extensionId
+                    });
+                }
+            </script>
         </body>
         </html>`;
     }
+
+    private async _handleMessage(message: any) {
+        switch (message.command) {
+            case 'toggleExtension':
+                await this._toggleExtension(message.extensionId);
+                break;
+        }
+    }
+
+    private async _toggleExtension(extensionId: string) {
+        // Assuming _virtualEnv is a property that should exist on ProjectPanel
+        // If it doesn't, you might need to add it to the class or adjust this method
+        if (this._virtualEnvironment && typeof this._virtualEnvironment.toggleExtension === 'function') {
+            this._virtualEnvironment.toggleExtension(extensionId);
+        } else {
+            console.error('_virtualEnv is not properly initialized or doesn\'t have toggleExtension method');
+        }
+        const projectType = await this._detectProjectType();
+        // Use spread operator to convert readonly array to mutable array
+        this.updateContent(projectType, [...vscode.extensions.all]);
+    }
+
+    private async _detectProjectType(): Promise<string> {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            throw new Error('No workspace folder found');
+        }
+        const detector = new ProjectDetector(workspaceFolder.uri.fsPath);
+        return await detector.detectProjectType();
+    }   
 
     private _isExtensionCompatible(extension: vscode.Extension<any>, projectType: string): boolean {
         const extensionId = extension.id.toLowerCase();

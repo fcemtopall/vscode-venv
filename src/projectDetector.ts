@@ -14,51 +14,37 @@ export class ProjectDetector {
 
     // Projeyi tespit eder ve türünü döndürür.
     async detectProjectType(): Promise<string> {
-        if (await this.isNodeProject()) {
-            return PROJECT_TYPES.NODE;
-        } else if (await this.isPythonProject()) {
-            return PROJECT_TYPES.PYTHON;
-        } else if (await this.isJavaProject()) {
-            return PROJECT_TYPES.JAVA;
-        } else if (await this.isDotNetProject()) {
-            return PROJECT_TYPES.DOTNET;
-        } else if (await this.isRubyProject()) {
-            return PROJECT_TYPES.RUBY;
-        } else if (await this.isGoProject()) {
-            return PROJECT_TYPES.GO;
-        } else if (await this.isRustProject()) {
-            return PROJECT_TYPES.RUST;
-        } else if (await this.isReactProject()) {
-            return PROJECT_TYPES.REACT;
-        } else if (await this.isAngularProject()) {
-            return PROJECT_TYPES.ANGULAR;
-        } else if (await this.isVueProject()) {
-            return PROJECT_TYPES.VUE;
-        } else if (await this.isSvelteProject()) {
-            return PROJECT_TYPES.SVELTE;
-        } else if (await this.isNextProject()) {
-            return PROJECT_TYPES.NEXTJS;
-        } else if (await this.isNuxtProject()) {
-            return PROJECT_TYPES.NUXTJS;
-        } else if (await this.isLaravelProject()) {
-            return PROJECT_TYPES.LARAVEL;
-        } else if (await this.isSymfonyProject()) {
-            return PROJECT_TYPES.SYMFONY;
-        } else if (await this.isDjangoProject()) {
-            return PROJECT_TYPES.DJANGO;
-        } else if (await this.isFlaskProject()) {
-            return PROJECT_TYPES.FLASK;
-        } else if (await this.isExpressProject()) {
-            return PROJECT_TYPES.EXPRESS;
-        } else if (await this.isSpringProject()) {
-            return PROJECT_TYPES.SPRING;
-        } else if (await this.isHibernateProject()) {
-            return PROJECT_TYPES.HIBERNATE;
-        } else if (await this.isFlutterProject()) {
-            return PROJECT_TYPES.FLUTTER;
-        } else {
-            return PROJECT_TYPES.UNKNOWN;
+        const detectionMethods = [
+            { method: this.isNodeProject, type: PROJECT_TYPES.NODE },
+            { method: this.isPythonProject, type: PROJECT_TYPES.PYTHON },
+            { method: this.isJavaProject, type: PROJECT_TYPES.JAVA },
+            { method: this.isDotNetProject, type: PROJECT_TYPES.DOTNET },
+            { method: this.isRubyProject, type: PROJECT_TYPES.RUBY },
+            { method: this.isGoProject, type: PROJECT_TYPES.GO },
+            { method: this.isRustProject, type: PROJECT_TYPES.RUST },
+            { method: this.isReactProject, type: PROJECT_TYPES.REACT },
+            { method: this.isAngularProject, type: PROJECT_TYPES.ANGULAR },
+            { method: this.isVueProject, type: PROJECT_TYPES.VUE },
+            { method: this.isSvelteProject, type: PROJECT_TYPES.SVELTE },
+            { method: this.isNextProject, type: PROJECT_TYPES.NEXTJS },
+            { method: this.isNuxtProject, type: PROJECT_TYPES.NUXTJS },
+            { method: this.isLaravelProject, type: PROJECT_TYPES.LARAVEL },
+            { method: this.isSymfonyProject, type: PROJECT_TYPES.SYMFONY },
+            { method: this.isDjangoProject, type: PROJECT_TYPES.DJANGO },
+            { method: this.isFlaskProject, type: PROJECT_TYPES.FLASK },
+            { method: this.isExpressProject, type: PROJECT_TYPES.EXPRESS },
+            { method: this.isSpringProject, type: PROJECT_TYPES.SPRING },
+            { method: this.isHibernateProject, type: PROJECT_TYPES.HIBERNATE },
+            { method: this.isFlutterProject, type: PROJECT_TYPES.FLUTTER },
+        ];
+
+        for (const { method, type } of detectionMethods) {
+            if (await method.call(this)) {
+                return type;
+            }
         }
+
+        return PROJECT_TYPES.UNKNOWN;
     }
 
     // Dosyanın var olup olmadığını kontrol eder.
@@ -113,7 +99,7 @@ export class ProjectDetector {
 
     // Angular projesi olup olmadığını kontrol eder.
     private async isAngularProject(): Promise<boolean> {    
-        return await this.fileExists('angular.json') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('angular.json') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Vue projesi olup olmadığını kontrol eder.
@@ -123,27 +109,27 @@ export class ProjectDetector {
 
     // Svelte projesi olup olmadığını kontrol eder.
     private async isSvelteProject(): Promise<boolean> {
-        return await this.fileExists('svelte.config.js') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('svelte.config.js') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Next.js projesi olup olmadığını kontrol eder.
     private async isNextProject(): Promise<boolean> {
-        return await this.fileExists('next.config.js') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('next.config.js') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Nuxt.js projesi olup olmadığını kontrol eder.
     private async isNuxtProject(): Promise<boolean> {
-        return await this.fileExists('nuxt.config.js') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('nuxt.config.js') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Laravel projesi olup olmadığını kontrol eder.
     private async isLaravelProject(): Promise<boolean> {    
-        return await this.fileExists('composer.json') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('composer.json') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Symfony projesi olup olmadığını kontrol eder.
     private async isSymfonyProject(): Promise<boolean> {
-        return await this.fileExists('composer.json') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('composer.json') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }
 
     // Django projesi olup olmadığını kontrol eder.
@@ -173,7 +159,7 @@ export class ProjectDetector {
 
     // Flutter projesi olup olmadığını kontrol eder.
     private async isFlutterProject(): Promise<boolean> {
-        return await this.fileExists('pubspec.yaml') || await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock'));
+        return await this.fileExists('pubspec.yaml') || (await this.fileExists('package.json') && (await this.fileExists('node_modules') || await this.fileExists('yarn.lock')));
     }   
         
 }

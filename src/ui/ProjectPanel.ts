@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { PROJECT_TYPES, GENERAL_DEV_TOOLS } from './utils/constants';
-import { ProjectDetector } from './projectDetector';
-import { VirtualEnvironment } from './virtualEnviroment';
-import { ProfileManager } from './services/ProfileManager';
+import { PROJECT_TYPES, GENERAL_DEV_TOOLS } from '../utils/constants';
+import { ProjectDetector } from '../services/ProjectDetector';
+import { VirtualEnvironment } from '../services/VirtualEnviroment';
+import { ProfileManager } from '../services/ProfileManager';
+
 export class ProjectPanel {
     public static currentPanel: ProjectPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;

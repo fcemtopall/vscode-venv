@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PROJECT_TYPES } from './constants';
+import { PROJECT_TYPES } from '../utils/constants';
 
 // ProjectDetector sınıfı, bir projenin türünü tespit etmek için kullanılır.
 export class ProjectDetector {

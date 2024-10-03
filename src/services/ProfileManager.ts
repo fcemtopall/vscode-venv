@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PROJECT_TYPES } from './utils/constants';
-import { ExtensionInfo } from './interfaces/IExtensionInfo';
-import { Profile } from './interfaces/IProfile';
-import { VirtualEnvironment } from './virtualEnviroment';
-
+import { PROJECT_TYPES } from '../utils/constants';
+import { ExtensionInfo } from '../interfaces/IExtensionInfo';
+import { Profile } from '../interfaces/IProfile';
+import { VirtualEnvironment } from './VirtualEnviroment';
 export class ProfileManager {
     private projectPath: string;
     private configPath: string;

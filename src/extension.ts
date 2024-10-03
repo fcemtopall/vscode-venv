@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { ProjectDetector } from './projectDetector';
-import { ProjectPanel } from './projectPanel';
+import { ProjectDetector } from './services/ProjectDetector';
+import { ProjectPanel } from './ui/projectPanel';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Eklenti aktif edildi!');
+    console.log('Extension activated!');
 
     // Workspace değişikliklerini dinle
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(onWorkspaceChange));

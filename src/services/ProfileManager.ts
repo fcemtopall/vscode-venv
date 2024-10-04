@@ -5,6 +5,8 @@ import { PROJECT_TYPES } from '../utils/constants';
 import { ExtensionInfo } from '../interfaces/IExtensionInfo';
 import { Profile } from '../interfaces/IProfile';
 import { VirtualEnvironment } from './VirtualEnviroment';
+
+
 export class ProfileManager {
     private projectPath: string;
     private configPath: string;
@@ -65,7 +67,8 @@ export class ProfileManager {
             .map(ext => ({
                 id: ext.id,
                 name: ext.packageJSON.displayName || ext.id,
-                isEnabled: true
+                isEnabled: true,
+                isCompatible: true
             }));
     }
 
@@ -132,7 +135,8 @@ export class ProfileManager {
                 this.customProfile.extensions.push({
                     id: extensionId,
                     name: extension.packageJSON.displayName || extensionId,
-                    isEnabled: true
+                    isEnabled: true,
+                    isCompatible: true
                 });
             }
         }
@@ -154,7 +158,8 @@ export class ProfileManager {
                 this.customProfile.extensions.push({
                     id: extensionId,
                     name: extension.packageJSON.displayName || extensionId,
-                    isEnabled: true
+                    isEnabled: true,
+                    isCompatible: true
                 });
                 this.saveProfiles();
             }

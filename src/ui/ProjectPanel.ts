@@ -3,6 +3,8 @@ import { PROJECT_TYPES, GENERAL_DEV_TOOLS } from '../utils/constants';
 import { ProjectDetector } from '../services/ProjectDetector';
 import { VirtualEnvironment } from '../services/VirtualEnviroment';
 import { ProfileManager } from '../services/ProfileManager';
+import { LocalizationManager } from '../services/LocalizationManager';
+import { ExtensionInfo } from '../interfaces/IExtensionInfo';
 
 export class ProjectPanel {
     public static currentPanel: ProjectPanel | undefined;
@@ -10,7 +12,9 @@ export class ProjectPanel {
     private _disposables: vscode.Disposable[] = [];
     private _virtualEnvironment: VirtualEnvironment;
     private _profileManager: ProfileManager;    
+    private _localization: LocalizationManager;
 
+    
     private constructor(panel: vscode.WebviewPanel) {
         this._panel = panel;
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
@@ -22,9 +26,11 @@ export class ProjectPanel {
         this._panel.webview.html = this._getWebviewContent('Proje türü algılanıyor...', []);
         this._virtualEnvironment = new VirtualEnvironment(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
         this._profileManager = new ProfileManager(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
+        this._localization = LocalizationManager.getInstance();
     }
 
     public static createOrShow() {
+        const l = LocalizationManager.getInstance();
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -36,7 +42,7 @@ export class ProjectPanel {
 
         const panel = vscode.window.createWebviewPanel(
             'projectInfo',
-            'Proje Bilgileri',
+            l.getString('projectInfo'),
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true
@@ -53,7 +59,7 @@ export class ProjectPanel {
     private _getWebviewContent(projectType: string, extensions?: vscode.Extension<any>[]) {
         let extensionList = '';
         const customProfileCard = this._createCustomProfileCard();
-        const recommendedProfileCard = this._createRecommendedProfileCard(projectType,extensions);
+        const recommendedProfileCard = this._createRecommendedProfileCard(projectType, extensions as vscode.Extension<any>[]);
 
         if (extensions) {
             const projectSpecificExtensions: string[] = [];
@@ -145,32 +151,41 @@ export class ProjectPanel {
     }
 
     private _createCustomProfileCard(): string {
+        const l = this._localization;
         const customProfile = this._profileManager.getCustomProfile();
         const extensionList = customProfile.extensions.map(ext => 
-            `<li>${ext.name} <button onclick="toggleExtension('custom', '${ext.id}')">Kaldır</button></li>`
+            `<li>${ext.name} <button onclick="toggleExtension('custom', '${ext.id}')">${l.getString(ext.isEnabled ? 'disable' : 'enable')}</button></li>`
         ).join('');
 
         return `
         <div class="card">
-            <h2>Özel Profil</h2>
+            <h2>${l.getString('customProfile')}</h2>
             <ul>${extensionList}</ul>
-            <button onclick="createProfile('custom')">Yeni Eklenti Ekle</button>
-            <button onclick="applyProfile('custom')">Profili Uygula</button>
+            <button onclick="createProfile('custom')">${l.getString('addNewExtension')}</button>
+            <button onclick="applyProfile('custom')">${l.getString('applyProfile')}</button>
         </div>`;
     }
 
-    private _createRecommendedProfileCard(projectType: string, extensions?: vscode.Extension<any>[]): string {
-        const recommendedProfile = this._profileManager.getRecommendedProfile(projectType, extensions);
+    private _createRecommendedProfileCard(projectType: string, vscodeExtensions: vscode.Extension<any>[]): string {
+        const l = this._localization;
+        const recommendedProfile = this._profileManager.getRecommendedProfile(projectType);
         const extensionList = recommendedProfile.extensions.map(ext => 
-            `<li>${ext.name} <button onclick="toggleExtension('recommended', '${ext.id}')">${ext.isEnabled ? 'Kaldır' : 'Ekle'}</button></li>`
+            `<li>${ext.name} 
+                <span style="color: ${ext.isCompatible ? 'green' : 'red'}">
+                    ${l.getString(ext.isCompatible ? 'compatible' : 'incompatible')}
+                </span>
+                <button onclick="toggleExtension('recommended', '${ext.id}')">
+                    ${l.getString(ext.isEnabled ? 'disable' : 'enable')}
+                </button>
+            </li>`
         ).join('');
 
         return `
         <div class="card">
-            <h2>Önerilen Profil</h2>
+            <h2>${l.getString('recommendedProfile')}</h2>
             <ul>${extensionList}</ul>
-            <button onclick="createProfile('recommended')">Önerilen Profili Özelleştir</button>
-            <button onclick="applyProfile('recommended')">Profili Uygula</button>
+            <button onclick="createProfile('recommended')">${l.getString('customizeProfile')}</button>
+            <button onclick="applyProfile('recommended')">${l.getString('applyProfile')}</button>
         </div>`;
     }
 
@@ -186,8 +201,9 @@ export class ProjectPanel {
 
     private async _detectProjectType(): Promise<string> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        const l = this._localization;
         if (!workspaceFolder) {
-            throw new Error('No workspace folder found');
+            throw new Error(l.getString('noWorkspace'));
         }
         const detector = new ProjectDetector(workspaceFolder.uri.fsPath);
         return await detector.detectProjectType();

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ProjectDetector } from './services/ProjectDetector';
-import { ProjectPanel } from './ui/projectPanel';
+import { ProjectPanel } from './ui/ProjectPanel';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Extension activated!');

@@ -15,6 +15,12 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "localizations": [
+      {
+        "language": "en",
+        "path": "./localization/en.json"
+      }
+    ],
     "commands": [
       {
         "command": "vscode-venv.helloWorld",

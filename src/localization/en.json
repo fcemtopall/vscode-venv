@@ -1,0 +1,22 @@
+{
+    "projectType": "Project Type",
+    "customProfile": "Custom Profile",
+    "recommendedProfile": "Recommended Profile",
+    "addNewExtension": "Add New Extension",
+    "applyProfile": "Apply Profile",
+    "customizeProfile": "Customize Profile",
+    "compatible": "Compatible",
+    "incompatible": "Incompatible",
+    "enable": "Enable",
+    "disable": "Disable",
+    "profileApplied": "{0} profile applied.",
+    "extensionAdded": "Extension {0} added to the profile.",
+    "extensionRemoved": "Extension {0} removed from the profile.",
+    "selectExtension": "Select an extension to add",
+    "recommendedExtensions": "Recommended Extensions",
+    "recommendedExtensionsDescription": "The following extensions are recommended for your project type.",
+    "recommendedExtensionsApply": "Apply Recommended Extensions",
+    "noWorkspace": "No workspace found. Please open a workspace to use this extension.",
+    "projectTypeCalculated": "Project type calculated...",
+    "projectInfo": "Project Info"
+  }

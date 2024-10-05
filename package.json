@@ -10,8 +10,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onWorkspaceChange",
-    "workspaceContains:**/*"
+    "onStartupFinished",
+    "workspaceContains:*.*",
+    "onCommand:vscode-venv.detectProject"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -23,8 +24,8 @@
     ],
     "commands": [
       {
-        "command": "vscode-venv.helloWorld",
-        "title": "Hello Developer"
+        "command": "vscode-project-detector.detectProject",
+        "title": "Detect Project Type"
       }
     ]
   },
